@@ -1,0 +1,20 @@
+extends layout.pug
+
+block content
+	h1 Books
+	p
+		a.button(href='/new') Create New Book
+	table
+		thead
+			tr
+				th Title
+				th Author
+				th Genre
+				th Year
+		tbody
+			tr
+				th
+					a(href='/detail') A brief history of time
+				th Stephen Hawkin
+				th Non Fiction
+				th 1988
