@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
+const Book = require('../models').Book;
 
 router.use(bodyParser.urlencoded({ extended: false }))
 
@@ -8,28 +9,72 @@ router.get('/', (req, res) => {
 	res.redirect('/books');
 });
 
-router.get('/books', (req, res) => {
-	res.render('index', {data: [{id: 1, title: 'A brief history of time', author: 'Stephen Hawking', genre: 'Non Fiction', year: 1988}]});
+router.get('/books', (req, res, next) => {
+	Book.findAll({order: [['title', 'ASC']]})
+		.then(books => res.render('index', {data: books}))
+		.catch(err => {
+			const error = new Error('books could not be retrieved from the database');
+			error.status = 500;
+			next(error);
+		});
 });
 
 router.get('/books/new', (req, res) => {
 	res.render('book', {newBook: true});
 });
 
-router.post('/books/new', (req, res) => {
-	res.send('Post request for new book');
+router.post('/books/new', (req, res, next) => {
+	Book.create(req.body)
+		.then(book => res.redirect('/books'))
+		.catch(err => {
+			if (err.name === 'SequelizeValidationError')
+				res.render('book', {newBook: true, errors: err.errors, ...req.body}) 
+			else  
+				throw err
+		})
+		.catch(err => {
+			const error = new Error('book could not be created');
+			error.status = 500;
+			next(error);
+		});
 });
 
-router.get('/books/:id', (req, res) => {
-	res.render('book', {id: req.params.id, title: 'A brief history of time', author: 'Stephen Hawking', genre: 'Non Fiction', year: 1988});
+router.get('/books/:id', (req, res, next) => {
+	Book.findById(req.params.id)
+		.then(book => res.render('book', book.dataValues))
+		.catch(err => {
+			const error = new Error('book not found');
+			error.status = 404;
+			next(error);
+		});
 });
 
-router.post('/books/:id', (req, res) => {
-	res.send('Post request to update the  book: ' + req.body.title);
+router.post('/books/:id', (req, res, next) => {
+	Book.findById(req.params.id)
+		.then(book => book.update(req.body))
+		.then(() => res.redirect('/books'))
+		.catch(err => {
+			if (err.name === 'SequelizeValidationError')
+				res.render('book', {errors: err.errors, ...req.body, id: req.params.id}) 
+			else  
+				throw err
+		})
+		.catch(err => {
+			const error = new Error('book could not be updated');
+			error.status = 500;
+			next(error);
+		});
 });
 
-router.post('/books/:id/delete', (req, res) => {
-	res.send('Post request to delete the book: ' + req.params.id);
+router.post('/books/:id/delete', (req, res, next) => {
+	Book.findById(req.params.id)
+		.then(book => book.destroy())
+		.then(() => res.redirect('/books'))
+		.catch(err => {
+			const error = new Error('book could not be deleted');
+			error.status = 500;
+			next(error);
+		});
 });
 
 router.use((req, res, next) => {
