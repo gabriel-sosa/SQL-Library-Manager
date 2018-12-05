@@ -31,3 +31,7 @@ block content
 					th= book.author
 					th= book.genre
 					th= book.year
+	if prevPage
+		a.button(href=prevPage) Previous Page
+	if nextPage
+		a.button(href=nextPage) Next Page

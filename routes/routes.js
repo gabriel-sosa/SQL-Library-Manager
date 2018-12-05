@@ -17,8 +17,18 @@ router.get('/books', (req, res, next) => {
 			...(req.query.author ? {author: {$like: `%${req.query.author}%`}} : {}),
 			...(req.query.genre  ? {genre: {$like: `%${req.query.genre}%`}}   : {}),
 			...(req.query.year   ? {year: req.query.year}                     : {})
-		}})
-		.then(books => res.render('index', {data: books, ...req.query}))
+		},
+		limit: 5,
+		offset: req.query.page ? parseInt(req.query.page) * 5 : 0
+	})
+		.then(books => res.render('index', {
+			data: books,
+			 ...req.query, 
+			 nextPage: req.query.page ? 
+			 				req.originalUrl.replace(/page=\d/, `page=${parseInt(req.query.page) + 1}`) : 
+			 				req.originalUrl + (req.originalUrl.includes('?') ? '' : '?') + '&page=1',
+			 prevPage: parseInt(req.query.page) > 0 && req.originalUrl.replace(/page=\d/, `page=${parseInt(req.query.page) - 1}`),
+		}))
 		.catch(err => {
 			const error = new Error('books could not be retrieved from the database');
 			error.status = 500;
