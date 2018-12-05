@@ -14,7 +14,7 @@ block content
 			label Genre:
 				input#genre(type='search', name='genre', value=genre)
 			label Year:
-				input#year(type='search', name='year', value=year)
+				input#year(type='search', name='year', value=year) 
 			input(type='submit', value='Search')
 	table
 		thead
@@ -31,7 +31,5 @@ block content
 					th= book.author
 					th= book.genre
 					th= book.year
-	if prevPage
-		a.button(href=prevPage) Previous Page
-	if nextPage
-		a.button(href=nextPage) Next Page
+	- for (let i = 0; i < pages; i++)
+		a.button(href=url + 'page=' + i)= i + 1
