@@ -10,8 +10,15 @@ router.get('/', (req, res) => {
 });
 
 router.get('/books', (req, res, next) => {
-	Book.findAll({order: [['title', 'ASC']]})
-		.then(books => res.render('index', {data: books}))
+	Book.findAll({
+		order: [['title', 'ASC']], 
+		where: {
+			...(req.query.title  ? {title: {$like: `%${req.query.title}%`}}   : {}),
+			...(req.query.author ? {author: {$like: `%${req.query.author}%`}} : {}),
+			...(req.query.genre  ? {genre: {$like: `%${req.query.genre}%`}}   : {}),
+			...(req.query.year   ? {year: req.query.year}                     : {})
+		}})
+		.then(books => res.render('index', {data: books, ...req.query}))
 		.catch(err => {
 			const error = new Error('books could not be retrieved from the database');
 			error.status = 500;
